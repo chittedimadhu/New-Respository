@@ -1,0 +1,689 @@
+{% set nav=[('dashboard','⌂','Dashboard'),('report','⚠','Report Event'),('observations','👁','EHS Observations'),('incidents','◉','Incidents'),('ptw','✓','Permit to Work'),('actions','✓','CAPA / Actions'),('sustainability','♻','Sustainability'),('training','▣','Training')] %}
+{% set title="EHS Observations" %}
+{% set active="observations" %}
+{% extends "base.html" %}
+
+{% block body %}
+
+<div class="section"> <div> <div class="eyebrow">SAFETY OBSERVATION MANAGEMENT</div> <h1>EHS Observations</h1> <p>Report, review, assign, close and approve safety observations through a controlled workflow.</p> </div>
+
+<div>
+    <a href="#report-observation" class="btn primary">
+        + Report Observation
+    </a>
+</div>
+
+</div>
+
+<!-- Status Summary -->
+
+<div class="stat-grid">
+
+<div class="stat-card">
+    <div class="stat-label">My / Visible Observations</div>
+    <div class="stat-value">{{ rows|length }}</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-label">Pending HOD Review</div>
+    <div class="stat-value">{{ pending_review|length }}</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-label">CAPA Assigned / Rework</div>
+    <div class="stat-value">{{ assigned|length }}</div>
+</div>
+
+<div class="stat-card">
+    <div class="stat-label">Pending HOD Approval</div>
+    <div class="stat-value">{{ pending_approval|length }}</div>
+</div>
+
+</div>
+
+<!-- Report Observation -->
+
+<div class="card form-card" id="report-observation">
+
+<div class="card-head">
+    <div>
+        <div class="eyebrow">EMPLOYEE REPORTING</div>
+        <h2>Report EHS Observation</h2>
+        <p>Any employee can report an unsafe condition, unsafe act or positive safety observation.</p>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+
+    <div class="form-grid">
+
+        <label>
+            Observation Category
+
+            <select name="category" required>
+
+                <option value="Unsafe Condition">
+                    Unsafe Condition
+                </option>
+
+                <option value="Unsafe Act">
+                    Unsafe Act
+                </option>
+
+                <option value="Positive Observation">
+                    Positive Safety Observation
+                </option>
+
+                <option value="Housekeeping">
+                    Housekeeping
+                </option>
+
+                <option value="PPE">
+                    PPE
+                </option>
+
+                <option value="Fire & Emergency">
+                    Fire & Emergency
+                </option>
+
+                <option value="Chemical Safety">
+                    Chemical Safety
+                </option>
+
+                <option value="Electrical Safety">
+                    Electrical Safety
+                </option>
+
+                <option value="Work at Height">
+                    Work at Height
+                </option>
+
+                <option value="Environmental">
+                    Environmental
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+        </label>
+
+        <label>
+            Severity
+
+            <select name="severity" required>
+
+                <option value="Low">
+                    Low
+                </option>
+
+                <option value="Medium" selected>
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Critical">
+                    Critical
+                </option>
+
+            </select>
+
+        </label>
+
+    </div>
+
+    <div class="form-grid">
+
+        <label>
+            Observation Title
+
+            <input
+                type="text"
+                name="title"
+                required
+                placeholder="Briefly describe the observation"
+            >
+
+        </label>
+
+        <label>
+            Location
+
+            <input
+                type="text"
+                name="location"
+                required
+                placeholder="Area / building / department"
+            >
+
+        </label>
+
+    </div>
+
+    <div class="form-grid">
+
+        <label>
+            Department
+
+            <select name="department" required>
+
+                <option value="">
+                    Select Department
+                </option>
+
+                {% for department in departments %}
+
+                <option value="{{ department }}">
+                    {{ department }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </label>
+
+        <label>
+            Photo / Evidence
+
+            <input
+                type="file"
+                name="attachment"
+                accept="image/*,.pdf"
+            >
+
+        </label>
+
+    </div>
+
+    <label>
+        Observation Description
+
+        <textarea
+            name="description"
+            required
+            placeholder="Describe what was observed, the potential risk and any immediate action taken."
+        ></textarea>
+
+    </label>
+
+    <div class="notice">
+        The observation will be routed to the selected Department HOD for review.
+        The HOD will evaluate the observation and assign the required CAPA.
+    </div>
+
+    <button
+        class="btn primary"
+        type="submit"
+    >
+        Submit Observation
+    </button>
+
+</form>
+
+</div>
+
+<!-- HOD REVIEW -->
+
+{% if pending_review %}
+
+<div class="card form-card">
+
+<div class="card-head">
+    <div>
+        <div class="eyebrow">HOD ACTION REQUIRED</div>
+        <h2>Observations Pending HOD Review</h2>
+        <p>Review the observation and assign CAPA to a responsible employee.</p>
+    </div>
+</div>
+
+{% for obs in pending_review %}
+
+<div class="workflow-card">
+
+    <div class="workflow-top">
+
+        <div>
+            <strong>{{ obs["ref"] }}</strong>
+
+            <span class="badge">
+                {{ obs["severity"] }}
+            </span>
+
+            <h3>{{ obs["title"] }}</h3>
+
+            <p>
+                <strong>Category:</strong>
+                {{ obs["category"] }}
+                &nbsp; | &nbsp;
+
+                <strong>Department:</strong>
+                {{ obs["department"] }}
+                &nbsp; | &nbsp;
+
+                <strong>Location:</strong>
+                {{ obs["location"] }}
+            </p>
+
+            <p>
+                <strong>Reported by:</strong>
+                {{ obs["reporter_name"] }}
+            </p>
+
+            <p>
+                {{ obs["description"] }}
+            </p>
+
+        </div>
+
+        <div class="status-pill">
+            {{ obs["status"] }}
+        </div>
+
+    </div>
+
+    <form
+        method="post"
+        action="{{ url_for('observation_review', observation_id=obs['id']) }}"
+    >
+
+        <div class="form-grid">
+
+            <label>
+                Responsible Employee
+
+                <select
+                    name="responsible_username"
+                    required
+                >
+
+                    <option value="">
+                        Select Employee
+                    </option>
+
+                    {% for employee in employees %}
+
+                    <option value="{{ employee['username'] }}">
+                        {{ employee['name'] }}
+                        — {{ employee['department'] }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+            <label>
+                CAPA Due Date
+
+                <input
+                    type="date"
+                    name="capa_due_date"
+                    required
+                >
+
+            </label>
+
+        </div>
+
+        <label>
+            Corrective / Preventive Action
+
+            <textarea
+                name="capa"
+                required
+                placeholder="Define the action required to eliminate or control the observed risk."
+            ></textarea>
+
+        </label>
+
+        <button
+            class="btn primary"
+            type="submit"
+        >
+            Review & Assign CAPA
+        </button>
+
+    </form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
+<!-- RESPONSIBLE EMPLOYEE ACTION -->
+
+{% if assigned %}
+
+<div class="card form-card">
+
+<div class="card-head">
+    <div>
+        <div class="eyebrow">CAPA ACTION REQUIRED</div>
+        <h2>My Assigned Observation CAPAs</h2>
+        <p>Complete the CAPA and submit evidence for HOD approval.</p>
+    </div>
+</div>
+
+{% for obs in assigned %}
+
+<div class="workflow-card">
+
+    <div class="workflow-top">
+
+        <div>
+
+            <strong>{{ obs["ref"] }}</strong>
+
+            <h3>{{ obs["title"] }}</h3>
+
+            <p>
+                <strong>Department:</strong>
+                {{ obs["department"] }}
+                &nbsp; | &nbsp;
+
+                <strong>Location:</strong>
+                {{ obs["location"] }}
+            </p>
+
+            <div class="notice">
+
+                <strong>CAPA:</strong><br>
+
+                {{ obs["capa"] }}
+
+                <br><br>
+
+                <strong>Due Date:</strong>
+                {{ obs["capa_due_date"] }}
+
+                {% if obs["status"] == "Rework Required" %}
+
+                <br><br>
+
+                <strong>HOD Comment:</strong>
+                {{ obs["hod_comment"] or "Please review and complete the required rework." }}
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="status-pill">
+            {{ obs["status"] }}
+        </div>
+
+    </div>
+
+    <form
+        method="post"
+        enctype="multipart/form-data"
+        action="{{ url_for('observation_close', observation_id=obs['id']) }}"
+    >
+
+        <label>
+            Closure / Completion Comment
+
+            <textarea
+                name="closure_comment"
+                required
+                placeholder="Explain what action was completed and the result."
+            ></textarea>
+
+        </label>
+
+        <label>
+            Closure Evidence
+
+            <input
+                type="file"
+                name="closure_evidence"
+                accept="image/*,.pdf"
+            >
+
+        </label>
+
+        <button
+            class="btn primary"
+            type="submit"
+        >
+            Submit CAPA for HOD Approval
+        </button>
+
+    </form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
+<!-- HOD FINAL APPROVAL -->
+
+{% if pending_approval %}
+
+<div class="card form-card">
+
+<div class="card-head">
+    <div>
+        <div class="eyebrow">FINAL HOD APPROVAL</div>
+        <h2>CAPA Closures Pending Approval</h2>
+        <p>Verify the completed CAPA and approve or return it for rework.</p>
+    </div>
+</div>
+
+{% for obs in pending_approval %}
+
+<div class="workflow-card">
+
+    <div class="workflow-top">
+
+        <div>
+
+            <strong>{{ obs["ref"] }}</strong>
+
+            <h3>{{ obs["title"] }}</h3>
+
+            <p>
+                <strong>Responsible Employee:</strong>
+                {{ obs["responsible_name"] }}
+            </p>
+
+            <p>
+                <strong>CAPA:</strong>
+                {{ obs["capa"] }}
+            </p>
+
+            <div class="notice">
+
+                <strong>Employee Closure Comment:</strong><br>
+
+                {{ obs["closure_comment"] }}
+
+                {% if obs["closure_evidence"] %}
+
+                <br><br>
+
+                <strong>Closure Evidence:</strong>
+
+                <br>
+
+                <a
+                    href="{{ url_for('uploaded', filename=obs['closure_evidence']) }}"
+                    target="_blank"
+                >
+                    View Evidence
+                </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="status-pill">
+            {{ obs["status"] }}
+        </div>
+
+    </div>
+
+    <form
+        method="post"
+        action="{{ url_for('observation_approve', observation_id=obs['id']) }}"
+    >
+
+        <label>
+            HOD Review Comment
+
+            <textarea
+                name="hod_comment"
+                placeholder="Enter approval comment or reason for rejection."
+            ></textarea>
+
+        </label>
+
+        <div class="button-row">
+
+            <button
+                class="btn primary"
+                type="submit"
+                name="decision"
+                value="approve"
+            >
+                ✓ Approve & Close Observation
+            </button>
+
+            <button
+                class="btn"
+                type="submit"
+                name="decision"
+                value="reject"
+            >
+                Return for Rework
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
+<!-- OBSERVATION REGISTER -->
+
+<div class="card form-card">
+
+<div class="card-head">
+    <div>
+        <div class="eyebrow">OBSERVATION REGISTER</div>
+        <h2>Observation History</h2>
+        <p>Track the current status of observations visible to you.</p>
+    </div>
+</div>
+
+{% if rows %}
+
+<div style="overflow-x:auto;">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Reference</th>
+                <th>Category</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Severity</th>
+                <th>Reporter</th>
+                <th>Responsible</th>
+                <th>Due Date</th>
+                <th>Status</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for obs in rows %}
+
+            <tr>
+
+                <td>
+                    <strong>{{ obs["ref"] }}</strong>
+                </td>
+
+                <td>
+                    {{ obs["category"] }}
+                </td>
+
+                <td>
+                    {{ obs["title"] }}
+                </td>
+
+                <td>
+                    {{ obs["department"] }}
+                </td>
+
+                <td>
+                    {{ obs["severity"] }}
+                </td>
+
+                <td>
+                    {{ obs["reporter_name"] }}
+                </td>
+
+                <td>
+                    {{ obs["responsible_name"] or "—" }}
+                </td>
+
+                <td>
+                    {{ obs["capa_due_date"] or "—" }}
+                </td>
+
+                <td>
+                    <span class="status-pill">
+                        {{ obs["status"] }}
+                    </span>
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% else %}
+
+<div class="notice">
+    No EHS observations are available yet.
+</div>
+
+{% endif %}
+
+</div>
+
+{% endblock %}
